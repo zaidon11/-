@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام مبيعات مرطبات الأمير</title>
+    <title>نظام وجبات مرطبات الأمير</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #1e3a8a;
             --plus: #10b981;
             --minus: #ef4444;
+            --action: #3b82f6;
             --bg: #f8fafc;
         }
 
@@ -18,9 +19,9 @@
             background-color: var(--bg);
             margin: 0;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            min-height: 100vh;
+            padding: 20px 0;
         }
 
         .app-container {
@@ -31,10 +32,19 @@
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             text-align: center;
+            margin-bottom: 20px;
         }
 
         header h1 { color: var(--primary); margin-bottom: 5px; }
-        header p { color: #64748b; margin-bottom: 30px; }
+        .meal-counter-badge {
+            background: var(--action);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 14px;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
 
         .item-card {
             background: #fff;
@@ -42,76 +52,59 @@
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 20px;
-            transition: all 0.3s ease;
         }
 
-        .item-name {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: #1e293b;
-            margin-bottom: 15px;
-        }
+        .item-name { font-size: 1.3rem; font-weight: bold; color: #1e293b; margin-bottom: 15px; }
 
-        .controls {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 25px;
-        }
+        .controls { display: flex; justify-content: center; align-items: center; gap: 25px; }
 
         .btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 15px;
-            border: none;
-            font-size: 28px;
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.1s;
+            width: 60px; height: 60px; border-radius: 15px; border: none;
+            font-size: 28px; color: white; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: 0.1s;
         }
 
-        .btn:active { transform: scale(0.9); }
+        .btn:active { transform: scale(0.9); opacity: 0.8; }
         .btn-plus { background-color: var(--plus); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
         .btn-minus { background-color: var(--minus); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
 
-        .counter-val {
-            font-size: 35px;
-            font-weight: 800;
-            color: var(--primary);
-            min-width: 60px;
+        .counter-val { font-size: 35px; font-weight: 800; color: var(--primary); min-width: 60px; }
+
+        .btn-new-meal {
+            background: var(--action); color: white; border: none; padding: 15px;
+            border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer;
+            width: 100%; font-family: 'Cairo'; margin-top: 10px; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
         }
 
-        .reset-section {
-            margin-top: 20px;
-            border-top: 1px solid #eee;
-            padding-top: 20px;
+        .history-container {
+            width: 90%; max-width: 450px; background: white; border-radius: 20px; padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         }
 
-        .btn-reset {
-            background: #94a3b8;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-family: 'Cairo';
-        }
+        .history-header { font-weight: bold; color: var(--primary); margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { color: #64748b; font-size: 13px; padding: 10px; }
+        td { padding: 12px 5px; border-bottom: 1px solid #f1f5f9; text-align: center; font-weight: bold; font-size: 14px; }
 
-        /* توست الإشعارات */
+        .btn-del-item { color: var(--minus); border: none; background: none; cursor: pointer; font-size: 18px; }
+
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center;
+        }
+        .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
+        .modal-btns button { flex: 1; padding: 12px; border-radius: 10px; border: none; font-family: 'Cairo'; font-weight: bold; cursor: pointer; }
+        .confirm-btn { background: var(--primary); color: white; }
+        .cancel-btn { background: #e2e8f0; color: #475569; }
+
         #toast {
-            position: fixed;
-            bottom: 20px;
-            background: #333;
-            color: white;
-            padding: 10px 25px;
-            border-radius: 50px;
-            display: none;
-            animation: fadeInUp 0.3s;
+            position: fixed; bottom: 20px; background: #333; color: white;
+            padding: 10px 25px; border-radius: 50px; display: none; z-index: 3000;
         }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -119,39 +112,54 @@
 <div class="app-container">
     <header>
         <h1>مرطبات الأمير</h1>
-        <p>نظام الجرد المتصل بالسحابة</p>
+        <div class="meal-counter-badge">عدد الوجبات الكلي: <span id="total-meals-count">0</span></div>
     </header>
 
     <div class="item-card">
-        <div class="item-name">مثلجات (الربع)</div>
+        <div class="item-name">مثلجات (250)</div>
         <div class="controls">
-            <button class="btn btn-plus" onclick="updateFirebase('quarter', 1)">+</button>
+            <button class="btn btn-plus" onclick="fastUpdate('quarter', 1)">+</button>
             <div class="counter-val" id="quarter-val">0</div>
-            <button class="btn btn-minus" onclick="updateFirebase('quarter', -1)">-</button>
+            <button class="btn btn-minus" onclick="fastUpdate('quarter', -1)">-</button>
         </div>
     </div>
 
     <div class="item-card">
         <div class="item-name">مثلجات (500)</div>
         <div class="controls">
-            <button class="btn btn-plus" onclick="updateFirebase('half', 1)">+</button>
+            <button class="btn btn-plus" onclick="fastUpdate('half', 1)">+</button>
             <div class="counter-val" id="half-val">0</div>
-            <button class="btn btn-minus" onclick="updateFirebase('half', -1)">-</button>
+            <button class="btn btn-minus" onclick="fastUpdate('half', -1)">-</button>
         </div>
     </div>
 
-    <div class="reset-section">
-        <button class="btn-reset" onclick="resetToday()">تصفير السجل اليومي</button>
+    <button class="btn-new-meal" onclick="askConfirm('FINISH', null, 'هل انتهت الخلطة وتريد حفظها وتصفير العداد؟')">✅ إنهاء الوجبة والبدء بجديد</button>
+</div>
+
+<div class="history-container">
+    <div class="history-header">📜 سجل الوجبات السابقة</div>
+    <table>
+        <thead><tr><th>الوقت</th><th>250</th><th>500</th><th>حذف</th></tr></thead>
+        <tbody id="history-body"></tbody>
+    </table>
+</div>
+
+<div id="confirmModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 id="modalMsg" style="margin-top: 0; color: var(--primary);">هل أنت متأكد؟</h3>
+        <div class="modal-btns">
+            <button class="confirm-btn" id="modalConfirmBtn">نعم</button>
+            <button class="cancel-btn" onclick="closeModal()">إلغاء</button>
+        </div>
     </div>
 </div>
 
-<div id="toast">تم التحديث بنجاح ✅</div>
+<div id="toast">تم الحفظ ✅</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-    // نفس إعدادات مركز الراشد الخاصة بك
     const firebaseConfig = {
         apiKey: "AIzaSyBpt495yhuoTbjunCLIFCF_8c1NesxZHWs",
         authDomain: "shopweb-3466b.firebaseapp.com",
@@ -164,41 +172,75 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    
-    // المجلد الجديد الخاص بالمرطبات حتى لا تختلط بالهواتف
-    const dbPath = "alasmer_refreshments/"; 
+    const currentPath = "alasmer_refreshments/current/";
+    const historyPath = "alasmer_refreshments/history/";
 
-    // دالة تحديث البيانات في الفايربيس
-    function updateFirebase(type, change) {
-        const ref = db.ref(dbPath + type);
-        ref.transaction((currentValue) => {
-            let newValue = (currentValue || 0) + change;
-            return newValue < 0 ? 0 : newValue;
-        }, (error) => {
-            if (!error) showToast();
+    function fastUpdate(type, change) {
+        db.ref(currentPath + type).transaction(v => {
+            let res = (v || 0) + change;
+            return res < 0 ? 0 : res;
         });
     }
 
-    // الاستماع للبيانات وعرضها مباشرة (Real-time)
-    db.ref(dbPath).on('value', (snapshot) => {
-        const data = snapshot.val() || { quarter: 0, half: 0 };
-        document.getElementById('quarter-val').innerText = data.quarter || 0;
-        document.getElementById('half-val').innerText = data.half || 0;
+    function askConfirm(action, key, msg) {
+        document.getElementById('modalMsg').innerText = msg;
+        document.getElementById('confirmModal').style.display = 'flex';
+        document.getElementById('modalConfirmBtn').onclick = () => {
+            if(action === 'FINISH') saveMeal();
+            if(action === 'DEL_ITEM') db.ref(historyPath + key).remove();
+            closeModal();
+        };
+    }
+
+    function closeModal() { document.getElementById('confirmModal').style.display = 'none'; }
+
+    function saveMeal() {
+        db.ref(currentPath).once('value', snap => {
+            const data = snap.val();
+            if(!data || (data.quarter === 0 && data.half === 0)) return;
+            const time = new Date().toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'});
+            db.ref(historyPath).push({ time, quarter: data.quarter, half: data.half });
+            db.ref(currentPath).set({ quarter: 0, half: 0 });
+            showToast("تم حفظ الوجبة وتصفير العداد");
+        });
+    }
+
+    db.ref(currentPath).on('value', snap => {
+        const d = snap.val() || { quarter: 0, half: 0 };
+        document.getElementById('quarter-val').innerText = d.quarter || 0;
+        document.getElementById('half-val').innerText = d.half || 0;
     });
 
-    // دالة التصفير
-    function resetToday() {
-        if(confirm("هل تريد تصفير مبيعات اليوم؟")) {
-            db.ref(dbPath).set({ quarter: 0, half: 0 });
+    db.ref(historyPath).on('value', snap => {
+        const body = document.getElementById('history-body');
+        const countSpan = document.getElementById('total-meals-count');
+        body.innerHTML = "";
+        const data = snap.val();
+        
+        if(data) {
+            const keys = Object.keys(data);
+            countSpan.innerText = keys.length;
+            keys.reverse().forEach(k => {
+                const m = data[k];
+                body.innerHTML += `<tr>
+                    <td>${m.time}</td>
+                    <td style="color:var(--plus)">${m.quarter}</td>
+                    <td style="color:var(--primary)">${m.half}</td>
+                    <td><button class="btn-del-item" onclick="askConfirm('DEL_ITEM', '${k}', 'حذف هذه الوجبة؟')">❌</button></td>
+                </tr>`;
+            });
+        } else {
+            countSpan.innerText = "0";
+            body.innerHTML = "<tr><td colspan='4'>لا يوجد سجل</td></tr>";
         }
-    }
+    });
 
-    function showToast() {
+    function showToast(msg) {
         const t = document.getElementById('toast');
+        t.innerText = msg + " ✅";
         t.style.display = 'block';
-        setTimeout(() => { t.style.display = 'none'; }, 2000);
+        setTimeout(() => t.style.display = 'none', 2000);
     }
 </script>
-
 </body>
 </html>
