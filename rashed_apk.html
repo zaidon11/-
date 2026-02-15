@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام مبيعات مرطبات الأمير</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --plus: #10b981;
+            --minus: #ef4444;
+            --bg: #f8fafc;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 90%;
+            max-width: 450px;
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        header h1 { color: var(--primary); margin-bottom: 5px; }
+        header p { color: #64748b; margin-bottom: 30px; }
+
+        .item-card {
+            background: #fff;
+            border: 2px solid #f1f5f9;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .item-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 15px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            border: none;
+            font-size: 28px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.1s;
+        }
+
+        .btn:active { transform: scale(0.9); }
+        .btn-plus { background-color: var(--plus); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
+        .btn-minus { background-color: var(--minus); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
+
+        .counter-val {
+            font-size: 35px;
+            font-weight: 800;
+            color: var(--primary);
+            min-width: 60px;
+        }
+
+        .reset-section {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .btn-reset {
+            background: #94a3b8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Cairo';
+        }
+
+        /* توست الإشعارات */
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            background: #333;
+            color: white;
+            padding: 10px 25px;
+            border-radius: 50px;
+            display: none;
+            animation: fadeInUp 0.3s;
+        }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <h1>مرطبات الأمير</h1>
+        <p>نظام الجرد المتصل بالسحابة</p>
+    </header>
+
+    <div class="item-card">
+        <div class="item-name">مثلجات (الربع)</div>
+        <div class="controls">
+            <button class="btn btn-plus" onclick="updateFirebase('quarter', 1)">+</button>
+            <div class="counter-val" id="quarter-val">0</div>
+            <button class="btn btn-minus" onclick="updateFirebase('quarter', -1)">-</button>
+        </div>
+    </div>
+
+    <div class="item-card">
+        <div class="item-name">مثلجات (500)</div>
+        <div class="controls">
+            <button class="btn btn-plus" onclick="updateFirebase('half', 1)">+</button>
+            <div class="counter-val" id="half-val">0</div>
+            <button class="btn btn-minus" onclick="updateFirebase('half', -1)">-</button>
+        </div>
+    </div>
+
+    <div class="reset-section">
+        <button class="btn-reset" onclick="resetToday()">تصفير السجل اليومي</button>
+    </div>
+</div>
+
+<div id="toast">تم التحديث بنجاح ✅</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+    // نفس إعدادات مركز الراشد الخاصة بك
+    const firebaseConfig = {
+        apiKey: "AIzaSyBpt495yhuoTbjunCLIFCF_8c1NesxZHWs",
+        authDomain: "shopweb-3466b.firebaseapp.com",
+        databaseURL: "https://shopweb-3466b-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "shopweb-3466b",
+        storageBucket: "shopweb-3466b.firebasestorage.app",
+        messagingSenderId: "41811528812",
+        appId: "1:41811528812:web:618f240f8106f218a8dc49"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    
+    // المجلد الجديد الخاص بالمرطبات حتى لا تختلط بالهواتف
+    const dbPath = "alasmer_refreshments/"; 
+
+    // دالة تحديث البيانات في الفايربيس
+    function updateFirebase(type, change) {
+        const ref = db.ref(dbPath + type);
+        ref.transaction((currentValue) => {
+            let newValue = (currentValue || 0) + change;
+            return newValue < 0 ? 0 : newValue;
+        }, (error) => {
+            if (!error) showToast();
+        });
+    }
+
+    // الاستماع للبيانات وعرضها مباشرة (Real-time)
+    db.ref(dbPath).on('value', (snapshot) => {
+        const data = snapshot.val() || { quarter: 0, half: 0 };
+        document.getElementById('quarter-val').innerText = data.quarter || 0;
+        document.getElementById('half-val').innerText = data.half || 0;
+    });
+
+    // دالة التصفير
+    function resetToday() {
+        if(confirm("هل تريد تصفير مبيعات اليوم؟")) {
+            db.ref(dbPath).set({ quarter: 0, half: 0 });
+        }
+    }
+
+    function showToast() {
+        const t = document.getElementById('toast');
+        t.style.display = 'block';
+        setTimeout(() => { t.style.display = 'none'; }, 2000);
+    }
+</script>
+
+</body>
+</html>
